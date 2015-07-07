@@ -147,39 +147,5 @@ write.csv(refinedData, file = "ISRIDrefined.csv")
 write.arff(refinedData, "refinedData.arff", eol = "\n", relation = deparse(substitute(refinedData)))
 ```
 
-following chuck is used to remove na's in subject status.and make hours numeric field.
 
-```{r}
-xy<-is.na(refinedData$Subject.Status)
-summary(xy)
-temp<-refinedData
-temp$Subject.Status<-ifelse(xy,temp$Subject.Status,"ALIVE")
-xy<-is.na(temp$Subject.Status)
-summary(xy)
-summary(temp$Subject.Status)
-temp[is.na(temp$Subject.Status),]<-"ALIVE"
-
-
-
-library(foreign)
-write.csv(temp, file = "withData.csv")
-write.arff(temp, "refinedData.arff", eol = "\n", relation = deparse(substitute(temp)))
-
-```
-hours manipulation
-```{r}
-newData$Group<-ifelse(newData$Number.Lost>1,'Yes','No')
-class(newData$Age)<-"numeric" 
-class(newData$Total.hours)
-newData$Total.hours<-format(newData$Total.hours, format = "%H:%M:%S")
-
-t<-newData$Total.hours
-newData$Total.hours<-sapply(strsplit(newData$Total.hours,":"),
-  function(x) {
-    x <- as.numeric(x)
-    x[1]+x[2]/60
-    }
-)
-refinedData$Total.hours
-```
 

@@ -1,0 +1,185 @@
+---
+title: "SARBAYES Survival Time"
+author: "shreyas"
+date: "May 28, 2015"
+output: html_document
+---
+This file produces the cleansed data from the ISRID dataset.
+
+```{r}
+getwd()
+setwd('/Users/shreyas/Desktop/SARBayes')
+
+library(XLConnect)
+Data <- readWorksheet(loadWorkbook("ISRIDclean.xls"),sheet=1)
+summary(Data)
+str(Data)
+```
+
+```{r}
+
+
+
+newData<-subset(Data, !Subject.Category %in% c('Aircraft-nonpowered','Aircraft','Abduction' ) )
+
+
+
+#identifying water Incidence
+newData$Super.Category<-
+  ifelse( newData$Subject.Category %in% c('Fisher','Boater','boater','Swimmer','Diver'), 'Water', 
+          
+          ifelse(newData$Subject.Category %in%  c('Vehicle','Vehicle-4wd','Motorcycle','Vehicle-Left','Mountain Biker','ATV'), 'Vehicle',
+                 
+                 ifelse(  newData$Subject.Category %in% c('Skier-Alpine','Snowboarder','Skier-Nordic','Snowmobile','Skier','Snowshoer','Ice Skater'), 'Snow',
+                          
+                          ifelse(newData$Subject.Category =='Child', 'Child',
+                                 
+                                 ifelse(newData$Subject.Category =='Despondent', 'Despondent',
+                                        
+                                        ifelse(newData$Subject.Category %in%  c('Mental Retardation','Autistic','Substance Abuse','Psychotic','Dementia'), 'Other Mental issues',
+                                               
+                                               ifelse(newData$Subject.Category =='Dementia', 'Dementia', 
+                                                      
+                                                      ifelse(is.na(newData$Subject.Category) , 'uncategorized', 'outDoor')
+                                                      )
+                                               )
+                                        )
+                                 )
+                          )
+                 )
+          )
+
+
+
+#identifying Group
+newData$Group<-ifelse(newData$Number.Lost>1|newData$Group.Type %in% c("AC","MM","FF","MF"),'Yes','No')
+newData$Group<-ifelse(newData$Group.Type %in% c("F","M"),newData$Group,"Yes")
+#newData$Group<-ifelse(newData$Number.Lost>1,'Yes','No')
+class(newData$Age)<-"numeric"
+class(newData$Total.hours)
+newData$Total.hours<-round(newData$Total.hours, digits = 2)
+newData$Total.hours<-newData$Total.hours*24
+
+#newData$Total.hours<-format(newData$Total.hours, format = "%H:%M:%S")
+```
+
+
+
+After the intial addition of some nominal attribute, now was the time to remove some redundant attributes. Following Chunk removes such attributes.
+```{r}
+
+refinedData <- newData
+
+refinedData <- refinedData[, -which(names(refinedData) %in% c("Key.","Incident.Date","Data.Source","Key.	","Mission..","City","County","EcoRegion.Division","Population.Density","Subject.Sub.Category","Clothing","Survival.training","Notify.hours","Search.hours","LKP.Type","LKP.Coord...N.S.","LKP.Coord...E.W.","Destination.Coord...N.S.","Destination.Coord...E.W.","Wind..kph.","Investigative.Find","Suspended","Medical","Subject.Found.feature","Found.Secondary","Find.Resource	Detection","Responsivenss","Lost.Strategy","Elevation.Change..ft.","Mobile..hours.","Distance.IPP..km.","Distance.IPP..miles.","Distance.Invest...km.","Distance.Invest...miles.","Track.Offset..m.","Find.Coord..N.S.","Find.Coord..E.W.","Dispersion.Angle..ÃŽ..Ã‚.","Mission.Close","Mission.Cause","Rescue.Method","Total.Air.Hours","Total.Dog.Hours","Total.Personnel","Total.Man.Hours","Total.Cost","Mission.Contact","Mission.Contact..","Comments","Scenario","Subject.Activity","Number.Lost","Search.Outcome","Find.Resource","Detection","Mobility","Subject.Category","Dispersion.Angle..Î..Â.","Sex","Weather","Snow"	,"Rain"))]
+
+
+
+#build can be removed
+refinedData<-subset(refinedData, Incident.Type %in% c('Search','Water')|is.na(Incident.Type))
+#refinedData<-subset(refinedData, Incident.Type %in% c('Search','Water'))
+
+
+refinedData$Subject.Status<-gsub("No Trace","DOA", refinedData$Subject.Status)
+#following statement may not be needed
+refinedData$Subject.Status<-gsub("Well","Alive", refinedData$Subject.Status)
+#changed at 11 jun 3:35pm, following statement may not be needed
+refinedData$Subject.Status<-gsub("Injured","Alive", refinedData$Subject.Status)
+#gsub("Injured", "Alive", refinedData$Subject.Status, ignore.case = TRUE, perl = FALSE,fixed = FALSE, useBytes = FALSE)
+
+
+keep<-refinedData$Subject.Status %in% c('DOA','Alive') | is.na(refinedData$Subject.Status)
+summary(keep)
+refinedData<-data.frame(lapply(refinedData, function(v) {
+  if (is.character(v)) return(toupper(v))
+  else return(v)
+}))
+#
+
+
+refinedData$Experience<-gsub("EXPERIENCE","GOOD", refinedData$Experience)
+refinedData$Personality<-gsub("SUICIDAL","WITHDRAWN", refinedData$Personality)
+                              
+                              
+groupDOA<-grepl("DOA", refinedData$Subject.Status, ignore.case = TRUE,fixed = FALSE, useBytes = FALSE)
+groupAlive<-grepl("ALIVE", refinedData$Subject.Status, ignore.case = TRUE,fixed = FALSE, useBytes = FALSE)
+refinedData$Subject.Status<-ifelse(groupDOA,"DOA",ifelse(groupAlive,"ALIVE",NA))
+refinedData$Group= factor(refinedData$Group)
+summary(refinedData$Group)
+
+xy<-is.na(refinedData$Subject.Status)
+refinedData$Subject.Status<-ifelse(xy,"ALIVE",refinedData$Subject.Status)
+
+
+
+#refinedData$Total.hours<-sapply(strsplit(refinedData$Total.hours,":"),
+#  function(x) {
+#    x <- as.numeric(x)
+#    x[1]+x[2]/60
+#    }
+#)
+
+#refinedData$Super.Category= factor(refinedData$Super.Category)
+refinedData$Subject.Status= factor(refinedData$Subject.Status)
+class(refinedData$Age)<-"numeric"
+class(refinedData$Total.hours)<-"numeric"
+refinedData$EcoRegion.Domain=factor(refinedData$EcoRegion.Domain)
+refinedData$Terrain= factor(refinedData$Terrain)
+refinedData$Subject.Category= factor(refinedData$Subject.Category)
+refinedData$Incident.Type=  factor(refinedData$Incident.Type)
+#refinedData$Sex = factor(refinedData$Sex)
+refinedData$Group.Type = factor(refinedData$Group.Type)
+refinedData$Build = factor(refinedData$Build)
+refinedData$Physical.Fitness = factor(refinedData$Physical.Fitness)
+refinedData$Mental.Fitness = factor(refinedData$Mental.Fitness)
+refinedData$Experience = factor(refinedData$Experience)
+refinedData$Equipment = factor(refinedData$Equipment)
+refinedData$Personality = factor(refinedData$Personality)
+#refinedData$Weather = factor(refinedData$Weather)
+#refinedData$Snow = factor(refinedData$Snow)
+#refinedData$Rain = factor(refinedData$Rain)
+#refinedData$Search.Outcome = factor(refinedData$Search.Outcome)
+#refinedData$Find.Resource = factor(refinedData$Find.Resource)
+#refinedData$Detection = factor(refinedData$Detection)
+#refinedData$Mobility = factor(refinedData$Mobility)
+
+library(foreign)
+write.csv(refinedData, file = "ISRIDrefined.csv")
+write.arff(refinedData, "refinedData.arff", eol = "\n", relation = deparse(substitute(refinedData)))
+```
+
+following chuck is used to remove na's in subject status.and make hours numeric field.
+
+```{r}
+xy<-is.na(refinedData$Subject.Status)
+summary(xy)
+temp<-refinedData
+temp$Subject.Status<-ifelse(xy,temp$Subject.Status,"ALIVE")
+xy<-is.na(temp$Subject.Status)
+summary(xy)
+summary(temp$Subject.Status)
+temp[is.na(temp$Subject.Status),]<-"ALIVE"
+
+
+
+library(foreign)
+write.csv(temp, file = "withData.csv")
+write.arff(temp, "refinedData.arff", eol = "\n", relation = deparse(substitute(temp)))
+
+```
+hours manipulation
+```{r}
+newData$Group<-ifelse(newData$Number.Lost>1,'Yes','No')
+class(newData$Age)<-"numeric" 
+class(newData$Total.hours)
+newData$Total.hours<-format(newData$Total.hours, format = "%H:%M:%S")
+
+t<-newData$Total.hours
+newData$Total.hours<-sapply(strsplit(newData$Total.hours,":"),
+  function(x) {
+    x <- as.numeric(x)
+    x[1]+x[2]/60
+    }
+)
+refinedData$Total.hours
+```
+

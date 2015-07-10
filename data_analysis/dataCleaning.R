@@ -2,6 +2,14 @@ getwd()
 setwd('/Users/shreyas/Desktop/SARBayes')
 library(XLConnect)
 
+
+cleanSnowData<-function(Snow){
+  Snow<-ifelse(Snow %in% c("1","3.05","blizzard","Down to 200mts","Dusting of snow on tops","flurries","light","Light","lightly","occasional", "Occasional","occasional to heavy","occasional-light","occasional/light","occassional,heavy","on gound","on ground","On ground","ON GROUND","on mountain tops","ON MOUNTIANS","on the tops","On the tops above 1200m","on tops","On tops","OVERNIGHT","periodically","Posibility","Predicted","Present","Recent deposit of fresh snow 15cm","Sleet","Sno9w on ground","snow","Snow","snow and sleet","Snow from previous few days", "Snow on ground, hard frost","Snowing","some","Some","some snow/sleet","Spring snow on the ground"        
+                           ,"Sw","thick covering","To 1200m","up high","Varied","Very little", "Was falling but no settling","Windblown sleet","y", "Y" ,"yes","Yes" , "YES","Yes Deep in Alpine areas","yes, higher up mountain"  ), "Yes", Snow)
+  
+  Snow<-ifelse(Snow %in% c("N?A","na","NA","Ni","nil","NIL" ,"NIL AT OPERATION HEIGHT","nil`","NK","no","nO","No","NO","non","none","None","NOT AT THIS LEVEL/ SOME HAIL","Not Known" ,"not quite","Not where subject Located"), "No", Snow)
+  return(Snow)
+}
 removeData<- function (data){
   newData<-subset(data, !Subject.Category %in% c('Aircraft-nonpowered','Aircraft','Abduction' ) )
   newData$Super.Category<-
@@ -39,6 +47,11 @@ removeData<- function (data){
   newData$Total.hours<-round(newData$Total.hours, digits = 2)
   newData$Total.hours<-newData$Total.hours*24
   
+  newData$Snow<-ifelse(newData$Weather %in% c('Sleet','Snow','Hail'),'Yes',newData$Snow)
+  newData$Snow<-cleanSnowData(newData$Snow)
+  newData$Rain<-ifelse(newData$Weather %in% c('Rain','Drizzle','Showers','Thunderstrom'),'Yes',newData$Rain)
+  newData$Rain<-ifelse(newData$Rain %in% c("1","2","3","68.4","Drizzle","Extreme","Hail","Heavy","Intermittent","Light","Medium","Scattered","Showers","Sleet"),'Yes',newData$Rain)
+  
   #newData$Total.hours<-format(newData$Total.hours, format = "%H:%M:%S")
   
   
@@ -61,10 +74,10 @@ removeData<- function (data){
                                           "Mission.Contact..","Comments","Subject.Activity",
                                           "Number.Lost","Search.Outcome","Find.Resource","Detection",
                                           "Mobility","Subject.Category","Dispersion.Angle..Î..Â.","Sex",
-                                          "Weather","Snow"	,"Rain"))]
+                                          "Weather"))]
   
   
- # kept population density(,"Population.Density") and  scenario (,"Scenario")
+ # kept population density(,"Population.Density") and  scenario (,"Scenario") also ,"Snow"  ,"Rain"
   #build can be removed
   refinedData<-subset(refinedData, Incident.Type %in% c('Search','Water')|is.na(Incident.Type))
   #refinedData<-subset(refinedData, Incident.Type %in% c('Search','Water'))
@@ -125,6 +138,10 @@ removeData<- function (data){
   refinedData$Personality = factor(refinedData$Personality)
 return(refinedData)
 }
+
+
+
+
 
 
 Data <- readWorksheet(loadWorkbook("ISRIDclean.xls"),sheet=1)

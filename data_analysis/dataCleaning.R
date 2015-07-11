@@ -49,9 +49,10 @@ removeData<- function (data){
   
   newData$Snow<-ifelse(newData$Weather %in% c('Sleet','Snow','Hail'),'Yes',newData$Snow)
   newData$Snow<-cleanSnowData(newData$Snow)
-  newData$Rain<-ifelse(newData$Weather %in% c('Rain','Drizzle','Showers','Thunderstrom'),'Yes',newData$Rain)
-  newData$Rain<-ifelse(newData$Rain %in% c("1","2","3","68.4","Drizzle","Extreme","Hail","Heavy","Intermittent","Light","Medium","Scattered","Showers","Sleet"),'Yes',newData$Rain)
-  
+  newData$Rain<-ifelse(newData$Weather %in% c('Rain','Showers','Thunderstrom'),'Yes',newData$Rain)
+  newData$Rain<-ifelse(newData$Weather =='Drizzle','No',newData$Rain)
+  newData$Rain<-ifelse(newData$Rain %in% c("1","2","3","68.4","Extreme","Hail","Heavy","Intermittent","Medium","Sleet"),'Yes',newData$Rain)
+  newData$Rain<-ifelse(newData$Rain %in% c("Drizzle","Light","Showers","Scattered"),'No',newData$Rain)
   #newData$Total.hours<-format(newData$Total.hours, format = "%H:%M:%S")
   
   

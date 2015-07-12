@@ -63,7 +63,7 @@ removeData<- function (data){
                                           "County","EcoRegion.Division",
                                           "Subject.Sub.Category","Clothing","Survival.training","Notify.hours",
                                           "Search.hours","LKP.Type","LKP.Coord...N.S.","LKP.Coord...E.W.",
-                                          "Destination.Coord...N.S.","Destination.Coord...E.W.","Wind..kph.",
+                                          "Destination.Coord...N.S.","Destination.Coord...E.W.",
                                           "Investigative.Find","Suspended","Medical","Subject.Found.feature",
                                           "Found.Secondary","Find.Resource	Detection","Responsivenss",
                                           "Lost.Strategy","Elevation.Change..ft.","Mobile..hours.",
@@ -75,10 +75,10 @@ removeData<- function (data){
                                           "Mission.Contact..","Comments","Subject.Activity",
                                           "Number.Lost","Search.Outcome","Find.Resource","Detection",
                                           "Mobility","Subject.Category","Dispersion.Angle..Î..Â.","Sex",
-                                          "Weather"))]
+                                          "Weather","Scenario","Population.Density"))]
   
   
- # kept population density(,"Population.Density") and  scenario (,"Scenario") also ,"Snow"  ,"Rain"
+ # kept  ,"Snow"  ,"Rain" ,"Wind..kph."
   #build can be removed
   refinedData<-subset(refinedData, Incident.Type %in% c('Search','Water')|is.na(Incident.Type))
   #refinedData<-subset(refinedData, Incident.Type %in% c('Search','Water'))
@@ -127,8 +127,8 @@ removeData<- function (data){
  
  
  #(,"Population.Density") and  scenario (,"Scenario")
-  refinedData$Population.Density= factor(refinedData$Population.Density)
-  refinedData$Scenario=  factor(refinedData$Scenario)
+ # refinedData$Population.Density= factor(refinedData$Population.Density)
+  #refinedData$Scenario=  factor(refinedData$Scenario)
  
   refinedData$Group.Type = factor(refinedData$Group.Type)
   refinedData$Build = factor(refinedData$Build)
